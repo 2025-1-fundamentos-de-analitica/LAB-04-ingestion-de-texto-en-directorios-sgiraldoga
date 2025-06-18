@@ -4,7 +4,25 @@
 """
 Escriba el codigo que ejecute la accion solicitada en cada pregunta.
 """
+import os
+import pandas as pd
+from pathlib import Path
+import zipfile
 
+def crear_dataframe(dataset_path):
+    frases = []
+    sentimientos = []
+    for sentimiento in ['positive', 'negative', 'neutral']:
+        path_sentimiento = dataset_path / sentimiento
+        for archivo in path_sentimiento.iterdir():
+            with open(archivo, encoding='utf-8') as f:
+                frase = f.read().strip()
+                frases.append(frase)
+                sentimientos.append(sentimiento)
+    return pd.DataFrame({
+        'phrase': frases,
+        'target': sentimientos
+    })
 
 def pregunta_01():
     """
@@ -71,3 +89,21 @@ def pregunta_01():
 
 
     """
+
+    zip_path = Path("files/input.zip")
+    input_dir = Path("input")
+    output_dir = Path("files/output")
+
+    if not input_dir.exists():
+        with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+            zip_ref.extractall()
+
+    output_dir.mkdir(exist_ok=True)
+
+    train_df = crear_dataframe(input_dir / 'train')
+    test_df = crear_dataframe(input_dir / 'test')
+
+    train_df.to_csv(output_dir / 'train_dataset.csv', index=False)
+    test_df.to_csv(output_dir / 'test_dataset.csv', index=False)
+
+    return train_df.head(), test_df.head()
